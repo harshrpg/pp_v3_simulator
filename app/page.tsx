@@ -9,6 +9,7 @@ export default function Home() {
   const [poolSizeUSDT, setPoolSizeUSDT] = React.useState(0);
   const [benchmark, setBenchmark] = React.useState(0);
   const [priceMultiple, setPriceMultiple] = React.useState(0);
+  const [burnCycles, setBurnCycles] = React.useState(0);
   const [priceOfPassTokens, setPriceOfPassTokens] = React.useState(0);
 
   const handlePoolSizePassChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,6 +28,10 @@ export default function Home() {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setPriceMultiple(Number(e.target.value));
+  };
+
+  const handleBurnCyclesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBurnCycles(Number(e.target.value));
   };
 
   React.useEffect(() => {
@@ -110,6 +115,18 @@ export default function Home() {
               onChange={(e) => handlePriceMultipleChange(e)}
             />
           </div>
+          <div>
+            <label htmlFor="burnCycles" className="font-bold mb-2 block">
+              Burn Cycles
+            </label>
+            <input
+              type="number"
+              id="burnCycles"
+              name="burnCycles"
+              className="p-2 border border-gray-300 rounded-md"
+              onChange={(e) => handleBurnCyclesChange(e)}
+            />
+          </div>
         </div>
         <div>
           <Simulation
@@ -118,6 +135,7 @@ export default function Home() {
             priceOfPassTokens={priceOfPassTokens}
             priceMultiple={priceMultiple}
             poolSizeUSDT={poolSizeUSDT}
+            burnCycles={burnCycles}
           />{" "}
         </div>
       </div>

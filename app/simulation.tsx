@@ -6,13 +6,19 @@ const Simulation = ({
   poolSizeUSDT,
   priceOfPassTokens,
   priceMultiple,
+  burnCycles,
 }: {
   benchmark: number;
   poolSizePass: number;
   poolSizeUSDT: number;
   priceOfPassTokens: number;
   priceMultiple: number;
+  burnCycles: number;
 }) => {
+  type AdvancedLogEntry = {
+    burnNumber: number;
+    properties: Property[];
+  };
   const [burnTokens, setBurnTokens] = React.useState(0);
   const [tokens, setTokens] = React.useState(poolSizePass);
   const [pool, setPool] = React.useState(poolSizeUSDT);
@@ -24,30 +30,58 @@ const Simulation = ({
     React.useState(0);
   const [totalTokenPriceToBurn, setTotalTokenPriceToBurn] = React.useState(0);
   const [properties, setProperties] = React.useState<Property[]>([]);
+  const [advancedLogEntries, setAdvancedLogEntries] = React.useState<
+    AdvancedLogEntry[]
+  >([]);
   const simulate = () => {
     console.log("benchmark: " + benchmark);
-    let updatedBurnTokens = 0;
+    let updatedBurnTokens = numberOfBurns;
     let updatedTokens = Number(poolSizePass);
     let updatedPool = Number(poolSizeUSDT);
     let updatedTokenPrice = Number(priceOfPassTokens);
-    let updatedTotalBurnTokens = 0;
-    let updatedCustomerSpending = 0;
-    let updatedNumberOfBurns = 0;
-    let updatedLastBurnCustomerSpending = 0;
-    let updatedTotalTokenPriceToBurn = 0;
+    let updatedTotalBurnTokens = totalBurnTokens;
+    let updatedCustomerSpending = customerSpending;
+    let updatedNumberOfBurns = numberOfBurns;
+    let updatedLastBurnCustomerSpending = lastBurnCustomerSpending;
+    let updatedTotalTokenPriceToBurn = totalTokenPriceToBurn;
 
-    while (updatedTokenPrice < priceMultiple * priceOfPassTokens) {
-      updatedCustomerSpending += updatedTokenPrice / benchmark;
-      updatedLastBurnCustomerSpending = updatedTokenPrice / benchmark;
-      updatedBurnTokens = benchmark * updatedTokens;
-      updatedTotalBurnTokens += updatedBurnTokens;
-      updatedTokens -= updatedBurnTokens;
-      updatedPool += updatedBurnTokens * updatedTokenPrice;
-      updatedTokenPrice = updatedPool / updatedTokens;
-      updatedNumberOfBurns += 1;
-      updatedTotalTokenPriceToBurn += updatedTokenPrice;
-      setTokens(updatedTokens);
-      setPool(updatedPool);
+    for (let i = 0; i < burnCycles; i++) {
+      console.log("burnCycles: " + i);
+      while (
+        updatedTokenPrice <
+        burnCycles * priceMultiple * priceOfPassTokens
+      ) {
+        updatedCustomerSpending += updatedTokenPrice / benchmark;
+        updatedLastBurnCustomerSpending = updatedTokenPrice / benchmark;
+        updatedBurnTokens = benchmark * updatedTokens;
+        updatedTotalBurnTokens += updatedBurnTokens;
+        updatedTokens -= updatedBurnTokens;
+        updatedPool += updatedBurnTokens * updatedTokenPrice;
+        updatedNumberOfBurns += 1;
+        updatedTotalTokenPriceToBurn += updatedBurnTokens * updatedTokenPrice;
+        setTokens(updatedTokens);
+        setPool(updatedPool);
+        const advancedProperties = [
+          { name: "Customer Spending", value: updatedCustomerSpending },
+          {
+            name: "Last Burn Customer Spending",
+            value: updatedLastBurnCustomerSpending,
+          },
+          {
+            name: "Total Token Price to Burn",
+            value: updatedTotalTokenPriceToBurn,
+          },
+        ];
+        const advancedLogEntry: AdvancedLogEntry = {
+          burnNumber: updatedNumberOfBurns,
+          properties: advancedProperties,
+        };
+        setAdvancedLogEntries((prevEntries) => [
+          ...prevEntries,
+          advancedLogEntry,
+        ]);
+        updatedTokenPrice = updatedPool / updatedTokens;
+      }
     }
 
     setBurnTokens(updatedBurnTokens);
@@ -61,11 +95,24 @@ const Simulation = ({
     let tempProperties = [
       { name: "Number of Burns", value: updatedNumberOfBurns },
       { name: "Customer Spending", value: updatedCustomerSpending },
-      { name: "Last Burn Customer Spending", value: updatedLastBurnCustomerSpending },
-      { name: "Total Token Price to Burn", value: updatedTotalTokenPriceToBurn },
+      {
+        name: "Last Burn Customer Spending",
+        value: updatedLastBurnCustomerSpending,
+      },
+      {
+        name: "Total Token Price to Burn",
+        value: updatedTotalTokenPriceToBurn,
+      },
     ];
 
     setProperties(tempProperties);
+  };
+
+  const simulateCycles = () => {
+    // for loop until the number of burn cycles is reached
+    for (let i = 0; i < burnCycles; i++) {
+      simulate();
+    }
   };
 
   useEffect(() => {
@@ -100,6 +147,16 @@ const Simulation = ({
       >
         Simulate
       </button>
+      <div>
+        {advancedLogEntries.map((entry) => (
+          <AdvancedLog
+            key={entry.burnNumber}
+            burnNumber={entry.burnNumber}
+            properties={entry.properties}
+          />
+        ))}
+        {/* Separator between */}
+      </div>
     </div>
   );
 };
@@ -140,8 +197,36 @@ const PropertyTable: React.FC<PropertyTableProps> = ({ properties }) => {
         <div key={name} className="flex flex-col">
           <p className="font-bold mb-2">{name}</p>
           <p className="text-sm">{value}</p>
+          {/* If properties length is more than 1 display a separator */}
+          {properties.length > 1 && (
+            <div className="border-b border-gray-300 my-2"></div>
+          )}
         </div>
       ))}
+    </div>
+  );
+};
+
+type AdvancedLogProps = {
+  burnNumber: number;
+  properties: Property[];
+};
+
+const AdvancedLog: React.FC<AdvancedLogProps> = ({
+  burnNumber,
+  properties,
+}) => {
+  return (
+    <div className="mt-8">
+      <h3 className="text-lg font-bold">Advanced Log - Burn {burnNumber}</h3>
+      <ul className="mt-4 list-disc list-inside">
+        {properties.map((property, index) => (
+          <li key={index} className="mb-2">
+            <span className="font-semibold">{property.name}:</span>{" "}
+            {property.value}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
