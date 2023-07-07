@@ -127,6 +127,9 @@ export default function Home() {
               onChange={(e) => handleBurnCyclesChange(e)}
             />
           </div>
+          <div>
+            Initial Price: {priceOfPassTokens}
+          </div>
         </div>
         <div>
           <Simulation

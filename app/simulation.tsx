@@ -49,9 +49,8 @@ const Simulation = ({
       console.log("burnCycles: " + i);
       while (
         updatedTokenPrice <
-        burnCycles * priceMultiple * priceOfPassTokens
+        priceOfPassTokens * priceMultiple ** burnCycles
       ) {
-        updatedCustomerSpending += updatedTokenPrice / benchmark;
         updatedLastBurnCustomerSpending = updatedTokenPrice / benchmark;
         updatedBurnTokens = benchmark * updatedTokens;
         updatedTotalBurnTokens += updatedBurnTokens;
@@ -59,17 +58,31 @@ const Simulation = ({
         updatedPool += updatedBurnTokens * updatedTokenPrice;
         updatedNumberOfBurns += 1;
         updatedTotalTokenPriceToBurn += updatedBurnTokens * updatedTokenPrice;
+        updatedCustomerSpending +=
+          (updatedBurnTokens * updatedTokenPrice) / benchmark;
         setTokens(updatedTokens);
         setPool(updatedPool);
         const advancedProperties = [
-          { name: "Customer Spending", value: updatedCustomerSpending },
           {
-            name: "Last Burn Customer Spending",
-            value: updatedLastBurnCustomerSpending,
+            name: "Pass Tokens being Burned",
+            value: updatedBurnTokens,
           },
           {
-            name: "Total Token Price to Burn",
-            value: updatedTotalTokenPriceToBurn,
+            name: "Updated Pass Tokens",
+            value: updatedTokens,
+          },
+          {
+            name: "Pass Token Price",
+            value: updatedTokenPrice,
+          },
+          {
+            name: "Updated $ Pool",
+            value: updatedPool,
+          },
+          { name: "Customer Spending", value: updatedCustomerSpending },
+          {
+            name: "Token Buyback price",
+            value: updatedBurnTokens * updatedTokenPrice,
           },
         ];
         const advancedLogEntry: AdvancedLogEntry = {
